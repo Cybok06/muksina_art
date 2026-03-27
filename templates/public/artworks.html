@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Artworks | Muksi Creations</title>
+    <meta name="description" content="Explore the Muksi Creations artwork gallery of realistic portraits and custom art from Tamale, Ghana." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.muksicreations.com/artworks" />
+    <meta property="og:title" content="Artworks | Muksi Creations" />
+    <meta property="og:description" content="Explore the Muksi Creations artwork gallery of realistic portraits and custom art." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.muksicreations.com/artworks" />
+    <meta property="og:image" content="https://www.muksicreations.com/static/images/profile_pic.jpeg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Artworks | Muksi Creations" />
+    <meta name="twitter:description" content="Explore the Muksi Creations artwork gallery of realistic portraits and custom art." />
+    <meta name="twitter:image" content="https://www.muksicreations.com/static/images/profile_pic.jpeg" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      .brand-logo{
+        width:40px; height:40px; border-radius:12px;
+        border:1px solid rgba(31,26,29,0.10);
+        box-shadow: 0 10px 24px rgba(79,32,57,.10);
+        object-fit:cover; background:#fff;
+      }
+      .art-card{
+        border: 1px solid rgba(31,26,29,0.12);
+        border-radius: 18px;
+        overflow:hidden;
+        box-shadow: 0 14px 32px rgba(79,32,57,.10);
+        transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+      }
+      .art-card:hover{
+        transform: translateY(-6px);
+        border-color: rgba(242,107,170,.25);
+        box-shadow: 0 18px 40px rgba(79,32,57,.16);
+      }
+      .art-card .card-img-top{
+        height: 230px;
+        object-fit: cover;
+        transition: transform .4s ease;
+      }
+      .art-card:hover .card-img-top{
+        transform: scale(1.02);
+      }
+      .fade-up{
+        opacity:0;
+        transform: translateY(18px);
+        animation: fadeUp .7s ease forwards;
+      }
+      .fade-up.delay-1{animation-delay:.05s}
+      .fade-up.delay-2{animation-delay:.12s}
+      .fade-up.delay-3{animation-delay:.18s}
+      @keyframes fadeUp{
+        to{opacity:1; transform: translateY(0)}
+      }
+      .slide-left{
+        opacity:0;
+        transform: translateX(-24px);
+        animation: slideLeft .7s ease forwards;
+      }
+      .slide-left.delay-1{animation-delay:.05s}
+      .slide-left.delay-2{animation-delay:.12s}
+      .slide-left.delay-3{animation-delay:.18s}
+      @keyframes slideLeft{
+        to{opacity:1; transform: translateX(0)}
+      }
+      .art-card-link{
+        display:block;
+        color:inherit;
+        text-decoration: none;
+      }
+      .art-card-link:hover{
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+      <div class="container">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('public.home') }}">
+          <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Muksi Creations logo" class="brand-logo" width="40" height="40">
+          <span>Muksi Creations</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('public.home') }}">Home</a></li>
+            <li class="nav-item"><a class="nav-link active" href="{{ url_for('public.artworks') }}">Artworks</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} mb-3">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 fw-bold mb-0">Artworks</h1>
+      </div>
+
+      {% if artworks %}
+        <div class="row g-4">
+          {% for art in artworks %}
+            <div class="col-md-6 col-lg-4">
+              <a class="art-card-link" href="{{ url_for('public.artwork_detail', artwork_id=art.id) }}">
+                <div class="card h-100 art-card fade-up delay-{{ loop.index0 % 3 + 1 }}">
+                  <img src="{{ url_for('public.artwork_image', artwork_id=art.id, slug=art.title|slugify) }}" class="card-img-top slide-left delay-{{ loop.index0 % 3 + 1 }}" alt="{{ art.title }} artwork by Muksi Creations" loading="lazy">
+                  <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">{{ art.title }}</h5>
+                  <p class="card-text text-muted">{{ art.description[:120] }}{% if art.description|length > 120 %}...{% endif %}</p>
+                  {% if art.hashtags %}
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                      {% for tag in art.hashtags.split(',') %}
+                        <span class="badge text-bg-light border">#{{ tag.strip() }}</span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <div class="mt-auto"></div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-light border">No artworks available yet.</div>
+      {% endif %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

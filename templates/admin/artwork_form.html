@@ -1,0 +1,156 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Upload Artwork' if mode == 'create' else 'Edit Artwork' }} | Muksina Arts{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1 class="h4 fw-bold mb-3">
+      {{ 'Upload Artwork' if mode == 'create' else 'Edit Artwork' }}
+    </h1>
+    <form method="post" id="artworkForm">
+      {{ form.hidden_tag() }}
+      {{ form.image_url(type="hidden", id="imageUrl") }}
+      <div class="mb-3">
+        <label class="form-label">Artwork Image</label>
+        <input class="form-control" type="file" id="imageFile" accept=".jpg,.jpeg,.png,.webp">
+        <div class="form-text">
+          {% if mode == 'edit' %}Select a file to replace the image.{% else %}Select an image to upload.{% endif %}
+        </div>
+      </div>
+      <div class="mb-3 d-none" id="uploadProgressWrap">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+          <div class="small text-muted" id="uploadStatus">Uploading to Cloudflare...</div>
+        </div>
+        <div class="progress">
+          <div class="progress-bar" id="uploadProgress" role="progressbar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="mb-3 d-none" id="uploadDone">
+        <div class="alert alert-success py-2 mb-0">Image uploaded successfully.</div>
+      </div>
+      <div class="mb-3">
+        {{ form.title.label(class="form-label") }}
+        {{ form.title(class="form-control") }}
+      </div>
+      <div class="mb-3">
+        {{ form.description.label(class="form-label") }}
+        {{ form.description(class="form-control", rows="5") }}
+      </div>
+      <div class="mb-3">
+        {{ form.hashtags.label(class="form-label") }}
+        {{ form.hashtags(class="form-control", placeholder="#portrait, #sketch, #commission") }}
+        <div class="form-text">Use commas to separate hashtags.</div>
+      </div>
+      <div class="mb-3">
+        {{ form.status.label(class="form-label") }}
+        {{ form.status(class="form-select") }}
+      </div>
+      <button class="btn btn-primary" type="submit" id="submitBtn" disabled>
+        <span class="submit-text">{{ 'Upload Artwork' if mode == 'create' else 'Save Changes' }}</span>
+        <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true" id="submitSpinner"></span>
+      </button>
+      <a class="btn btn-outline-secondary ms-2" href="{{ url_for('admin.manage_artworks') }}">Cancel</a>
+    </form>
+  </div>
+</div>
+<script>
+  (function () {
+    const form = document.getElementById("artworkForm");
+    const spinner = document.getElementById("submitSpinner");
+    const submitText = document.querySelector("#submitBtn .submit-text");
+    const submitBtn = document.getElementById("submitBtn");
+    const imageFile = document.getElementById("imageFile");
+    const imageUrl = document.getElementById("imageUrl");
+    const progressWrap = document.getElementById("uploadProgressWrap");
+    const progressBar = document.getElementById("uploadProgress");
+    const uploadStatus = document.getElementById("uploadStatus");
+    const uploadDone = document.getElementById("uploadDone");
+    const allowed = [".jpg", ".jpeg", ".png", ".webp"];
+
+    const enableSubmitIfReady = () => {
+      if (imageUrl.value) {
+        submitBtn.removeAttribute("disabled");
+      } else {
+        submitBtn.setAttribute("disabled", "disabled");
+      }
+    };
+
+    const getDirectUpload = async () => {
+      const res = await fetch("{{ url_for('admin.cloudflare_direct_upload') }}", { method: "POST" });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Upload init failed");
+      return data;
+    };
+
+    const uploadToCloudflare = async (file) => {
+      const { upload_url, image_url } = await getDirectUpload();
+      progressWrap.classList.remove("d-none");
+      uploadDone.classList.add("d-none");
+      progressBar.style.width = "0%";
+      uploadStatus.textContent = "Uploading to Cloudflare...";
+
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", upload_url, true);
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = pct + "%";
+          }
+        });
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error("Cloudflare upload failed"));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Cloudflare upload failed"));
+        const formData = new FormData();
+        formData.append("file", file, file.name);
+        xhr.send(formData);
+      });
+
+      imageUrl.value = image_url;
+      progressBar.style.width = "100%";
+      uploadStatus.textContent = "Upload complete.";
+      uploadDone.classList.remove("d-none");
+      enableSubmitIfReady();
+    };
+
+    imageFile.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      imageUrl.value = "";
+      enableSubmitIfReady();
+      if (!file) return;
+
+      const lower = file.name.toLowerCase();
+      if (!allowed.some(ext => lower.endsWith(ext))) {
+        alert("Invalid file type. Use JPG, JPEG, PNG, or WEBP.");
+        imageFile.value = "";
+        return;
+      }
+
+      try {
+        // show loading immediately
+        progressWrap.classList.remove("d-none");
+        uploadDone.classList.add("d-none");
+        progressBar.style.width = "0%";
+        uploadStatus.textContent = "Starting upload...";
+        await uploadToCloudflare(file);
+      } catch (err) {
+        progressWrap.classList.add("d-none");
+        uploadDone.classList.add("d-none");
+        alert(err.message || "Upload failed.");
+      }
+    });
+
+    form.addEventListener("submit", () => {
+      spinner.classList.remove("d-none");
+      submitText.textContent = "Uploading...";
+    });
+
+    enableSubmitIfReady();
+  })();
+</script>
+{% endblock %}

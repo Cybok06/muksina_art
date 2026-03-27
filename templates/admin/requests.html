@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block title %}Requests | Muksina Arts{% endblock %}
+{% block content %}
+<h1 class="h4 fw-bold mb-3">Purchase Requests</h1>
+
+{% if request_forms %}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Requester</th>
+            <th>Contact</th>
+            <th>Artwork</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req, form in request_forms %}
+            <tr>
+              <td>{{ req.full_name }}</td>
+              <td>
+                <div>{{ req.phone_number }}</div>
+                <div class="text-muted small">{{ req.email }}</div>
+              </td>
+              <td>{{ req.artwork_title_snapshot }}</td>
+              <td class="text-capitalize">{{ req.status }}</td>
+              <td>{{ req.created_at.strftime("%Y-%m-%d") }}</td>
+              <td class="text-end">
+                <form method="post" class="d-inline-flex gap-2">
+                  {{ form.hidden_tag() }}
+                  <input type="hidden" name="request_id" value="{{ req.id }}">
+                  {{ form.status(class="form-select form-select-sm") }}
+                  {{ form.submit(class="btn btn-sm btn-outline-primary") }}
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="alert alert-light border">No requests received yet.</div>
+{% endif %}
+{% endblock %}

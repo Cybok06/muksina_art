@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% block title %}Delete Artwork | Muksina Arts{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1 class="h5 fw-bold">Delete artwork?</h1>
+    <p class="text-muted">This will permanently remove <strong>{{ artwork.title }}</strong>.</p>
+    <form method="post">
+      {{ form.hidden_tag() }}
+      {{ form.submit(class="btn btn-danger") }}
+      <a class="btn btn-outline-secondary ms-2" href="{{ url_for('admin.manage_artworks') }}">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

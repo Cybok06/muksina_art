@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block title %}Manage Artworks | Muksina Arts{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 fw-bold mb-0">Artworks</h1>
+  <a class="btn btn-primary" href="{{ url_for('admin.upload_artwork') }}">Upload Artwork</a>
+</div>
+
+{% if artworks %}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Artwork</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for art in artworks %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="{{ art.image_filename }}" alt="{{ art.title }}" width="56" height="56" class="rounded border object-fit-cover">
+                  <div>
+                    <div class="fw-bold">{{ art.title }}</div>
+                    <div class="text-muted small">{{ art.description[:60] }}{% if art.description|length > 60 %}...{% endif %}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-capitalize">{{ art.status }}</td>
+              <td>{{ art.created_at.strftime("%Y-%m-%d") }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.edit_artwork', artwork_id=art.id) }}">Edit</a>
+                <a class="btn btn-sm btn-outline-danger" href="{{ url_for('admin.delete_artwork', artwork_id=art.id) }}">Delete</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="alert alert-light border">No artworks yet. Upload your first piece.</div>
+{% endif %}
+{% endblock %}

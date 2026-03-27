@@ -1,0 +1,133 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard | Muksina Arts{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon pink"><i class="bi bi-easel2"></i></div>
+          <div>
+            <div class="text-muted">Total Artworks</div>
+            <div class="h2 fw-bold mb-0">{{ artwork_count }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon peach"><i class="bi bi-envelope-heart"></i></div>
+          <div>
+            <div class="text-muted">Total Requests</div>
+            <div class="h2 fw-bold mb-0">{{ request_count }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon gold"><i class="bi bi-graph-up-arrow"></i></div>
+          <div>
+            <div class="text-muted">Total Visits</div>
+            <div class="h2 fw-bold mb-0">{{ total_visits }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon dark"><i class="bi bi-eye"></i></div>
+          <div>
+            <div class="text-muted">Artwork Views</div>
+            <div class="h2 fw-bold mb-0">{{ total_artwork_views }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h6 fw-bold mb-0">Visits (Last 7 Days)</h2>
+        </div>
+        {% set max_count = (trend | map(attribute='count') | list | max) if trend else 0 %}
+        {% for row in trend %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="small text-muted" style="width:90px">{{ row.date }}</div>
+            <div class="progress flex-grow-1" style="height:8px">
+              <div class="progress-bar" style="width: {{ 1 if max_count == 0 else (row.count / max_count * 100) }}%"></div>
+            </div>
+            <div class="small fw-bold" style="width:36px; text-align:right">{{ row.count }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h6 fw-bold mb-3">Most Viewed Artworks</h2>
+        {% if top_artworks %}
+          <ul class="list-group list-group-flush">
+            {% for art, views in top_artworks %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">{{ art.title }}</span>
+                <span class="badge text-bg-light border">{{ views }} views</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-muted">No artwork views yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h2 class="h5 fw-bold mb-0">Recent Requests</h2>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.view_requests') }}">View All</a>
+</div>
+
+{% if recent_requests %}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Requester</th>
+            <th>Artwork</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in recent_requests %}
+            <tr>
+              <td>{{ req.full_name }}</td>
+              <td>{{ req.artwork_title_snapshot }}</td>
+              <td class="text-capitalize">{{ req.status }}</td>
+              <td>{{ req.created_at.strftime("%Y-%m-%d") }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="alert alert-light border">No requests yet.</div>
+{% endif %}
+{% endblock %}
